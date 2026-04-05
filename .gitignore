@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.joblib
+*.h5
+*.pkl
+.env
+.streamlit/credentials.toml
