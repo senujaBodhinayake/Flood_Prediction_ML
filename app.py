@@ -147,6 +147,37 @@ st.markdown("""
         transform: translateY(2px) scale(0.98) !important;
         box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3) !important;
     }
+
+    /* Risk Percentage Progress Bars */
+    .progress-container {
+        margin-top: 20px;
+        text-align: left;
+    }
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #a0aec0;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    .progress-bar-bg {
+        width: 100%;
+        background-color: #2d3748;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        height: 8px;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 8px;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .fill-low { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+    .fill-med { background: linear-gradient(90deg, #f1c40f, #f39c12); }
+    .fill-high { background: linear-gradient(90deg, #e74c3c, #c0392b); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -206,28 +237,78 @@ if predict_clicked:
     st.markdown("<br/>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; color: #e2e8f0; margin-bottom: 20px;'>Comparative Analysis Results</h3>", unsafe_allow_html=True)
     
-    def get_risk_markup(pred_val):
-        if pred_val >= 0.50:
-            return '<div class="risk-badge risk-high">⚠️ High Risk</div>'
-        else:
-            return '<div class="risk-badge risk-low">✅ Low Risk</div>'
-            
-    res_col1, res_col2 = st.columns(2)
-    
-    with res_col1:
-        st.markdown(f"""
-        <div class="predict-box">
-            <div class="model-title">📈 Linear Regression</div>
-            <div class="prediction-value">{lr_pred:.4f}</div>
-            {get_risk_markup(lr_pred)}
-        </div>
-        """, unsafe_allow_html=True)
+    def get_percentages(pred_val):
+        p = max(0.0, min(1.0, pred_val))
+        w_low = max(0.001, 1 - abs(p - 0.0) * 1.5)
+        w_med = max(0.001, 1 - abs(p - 0.5) * 2.0)
+        w_high = max(0.001, 1 - abs(p - 1.0) * 1.5)
+        total = w_low + w_med + w_high
         
-    with res_col2:
-        st.markdown(f"""
-        <div class="predict-box">
-            <div class="model-title">🌳 Random Forest</div>
-            <div class="prediction-value">{rf_pred:.4f}</div>
-            {get_risk_markup(rf_pred)}
+        perc_low = (w_low / total) * 100
+        perc_med = (w_med / total) * 100
+        perc_high = (w_high / total) * 100
+        return perc_low, perc_med, perc_high
+
+    def get_risk_markup(pred_val, perc_low, perc_med, perc_high):
+        if pred_val >= 0.50:
+            badge = '<div class="risk-badge risk-high">⚠️ High Risk</div>'
+        else:
+            badge = '<div class="risk-badge risk-low">✅ Low Risk</div>'
+
+        percentages_html = f"""
+        <div class="progress-container">
+            <div class="progress-label"><span>Low Risk</span><span>{perc_low:.1f}%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill fill-low" style="width: {perc_low}%;"></div></div>
+            <div class="progress-label"><span>Medium Risk</span><span>{perc_med:.1f}%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill fill-med" style="width: {perc_med}%;"></div></div>
+            <div class="progress-label"><span>High Risk</span><span>{perc_high:.1f}%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill fill-high" style="width: {perc_high}%;"></div></div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+        
+        return badge + percentages_html
+
+    lr_p_low, lr_p_med, lr_p_high = get_percentages(lr_pred)
+    rf_p_low, rf_p_med, rf_p_high = get_percentages(rf_pred)
+
+    tab1, tab2 = st.tabs(["📊 Prediction Overview", "⚖️ Detailed Comparison"])
+    
+    with tab1:
+        res_col1, res_col2 = st.columns(2)
+        
+        with res_col1:
+            st.markdown(f"""
+            <div class="predict-box">
+                <div class="model-title">📈 Linear Regression</div>
+                <div class="prediction-value">{lr_pred:.4f}</div>
+                {get_risk_markup(lr_pred, lr_p_low, lr_p_med, lr_p_high)}
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with res_col2:
+            st.markdown(f"""
+            <div class="predict-box">
+                <div class="model-title">🌳 Random Forest</div>
+                <div class="prediction-value">{rf_pred:.4f}</div>
+                {get_risk_markup(rf_pred, rf_p_low, rf_p_med, rf_p_high)}
+            </div>
+            """, unsafe_allow_html=True)
+
+    with tab2:
+        st.markdown("<h4 style='text-align: center; color: #e2e8f0; margin-bottom: 20px;'>Pre-Computed Model Evaluation Metrics</h4>", unsafe_allow_html=True)
+        
+        st.image("comparisons/model_comparison.png", caption="Overall Model Evaluation metrics", use_container_width=True)
+        st.markdown("<br/>", unsafe_allow_html=True)
+        
+        st.image("comparisons/feature_importance.png", caption="Feature Importance (Random Forest)", use_container_width=True)
+        st.markdown("<br/>", unsafe_allow_html=True)
+        
+        st.image("comparisons/correlation_heatmap.png", caption="Feature Correlation Heatmap", use_container_width=True)
+        st.markdown("<br/>", unsafe_allow_html=True)
+        
+        st.markdown("<h5 style='text-align: center; color: #a0aec0;'>Actual vs Predicted Diagnostics</h5>", unsafe_allow_html=True)
+        eval_col1, eval_col2 = st.columns(2)
+        with eval_col1:
+            st.image("comparisons/lr_actual_vs_pred.png", caption="Linear Regression: Actual vs Predicted", use_container_width=True)
+        with eval_col2:
+            st.image("comparisons/rf_actual_vs_pred.png", caption="Random Forest: Actual vs Predicted", use_container_width=True)
