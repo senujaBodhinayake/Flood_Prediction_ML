@@ -255,16 +255,14 @@ if predict_clicked:
         else:
             badge = '<div class="risk-badge risk-low">✅ Low Risk</div>'
 
-        percentages_html = f"""
-        <div class="progress-container">
+        percentages_html = f"""<div class="progress-container">
             <div class="progress-label"><span>Low Risk</span><span>{perc_low:.1f}%</span></div>
             <div class="progress-bar-bg"><div class="progress-bar-fill fill-low" style="width: {perc_low}%;"></div></div>
             <div class="progress-label"><span>Medium Risk</span><span>{perc_med:.1f}%</span></div>
             <div class="progress-bar-bg"><div class="progress-bar-fill fill-med" style="width: {perc_med}%;"></div></div>
             <div class="progress-label"><span>High Risk</span><span>{perc_high:.1f}%</span></div>
             <div class="progress-bar-bg"><div class="progress-bar-fill fill-high" style="width: {perc_high}%;"></div></div>
-        </div>
-        """
+        </div>"""
         
         return badge + percentages_html
 
@@ -277,22 +275,18 @@ if predict_clicked:
         res_col1, res_col2 = st.columns(2)
         
         with res_col1:
-            st.markdown(f"""
-            <div class="predict-box">
+            st.markdown(f"""<div class="predict-box">
                 <div class="model-title">📈 Linear Regression</div>
                 <div class="prediction-value">{lr_pred:.4f}</div>
                 {get_risk_markup(lr_pred, lr_p_low, lr_p_med, lr_p_high)}
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
             
         with res_col2:
-            st.markdown(f"""
-            <div class="predict-box">
+            st.markdown(f"""<div class="predict-box">
                 <div class="model-title">🌳 Random Forest</div>
                 <div class="prediction-value">{rf_pred:.4f}</div>
                 {get_risk_markup(rf_pred, rf_p_low, rf_p_med, rf_p_high)}
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
 
     with tab2:
         st.markdown("<h4 style='text-align: center; color: #e2e8f0; margin-bottom: 20px;'>Pre-Computed Model Evaluation Metrics</h4>", unsafe_allow_html=True)
